@@ -7,6 +7,12 @@ DATA_DIR = "./output_data"
 CODE_DIR = "./"
 ASSET_DIR = "./assets"
 
+toolbench_key = "" #add your toolbench key
+toolbench_server_ip = "http://8.130.32.149:8080/rapidapi"
+
+api_key = "" #set your openai api key here
+base_url = "" #set your openai base url here
+
 def do_24(list_data,stack=[]):
     '''
     递归计算，减少一个数字

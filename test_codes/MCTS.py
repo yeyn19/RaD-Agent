@@ -9,7 +9,7 @@ from tqdm import tqdm
 from openai import BadRequestError, OpenAI
 from openai import APIConnectionError
 
-from ets_utils import CODE_DIR
+from ets_utils import CODE_DIR, api_key, base_url
 
 def do_24(list_data,stack=[]):
     '''
@@ -109,13 +109,13 @@ numbers: <<>> -> scores:
 def get_reward(node):
     now_nums = node.env.now_list
     now_nums_str = " ".join([str(num) for num in now_nums])
-    client = OpenAI(
-        api_key="", # your api key
-        base_url="", # your base url
-        timeout=30,
-    )
     new_prompt = prompt.replace("<<>>",now_nums_str)
+    
     openai_model = "gpt-3.5-turbo-16k"
+    client = openai.OpenAI(
+        api_key = api_key, 
+        base_url= base_url,
+    )
     openai_response = client.chat.completions.create(
         model=openai_model,
         messages = [{"role":"system","content": new_prompt}],

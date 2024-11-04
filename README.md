@@ -22,10 +22,7 @@ You need to first clone the repo and install the project dependency:
 python -m pip install -e ./
 ```
 
-Then, before you start, you need to put your OpenAI API Keys in someplace of the Repo.
-
-- `./LLM/openai_0613.py`, here you need to write the `api_key, base_url, pool`. This is the main entrace to query the OpenAI Engine.
-- `./test_codes/MCTS.py`, here you need to write `api_key, base_url`，if you want to implement a LLM-Based MCTS baseline.
+Then, before you start, you need to put your OpenAI API Keys in someplace of the Repo `ets_utils.py`. 
 
 
 
@@ -129,21 +126,25 @@ python ./test_codes/MCTS.py
 
 ## 4. ToolBench
 
-To test on Toolbench, it is a little complex. You need to first Start a ToolServer following the guide [here](https://github.com/OpenBMB/ToolBench), also you can build it [locally](https://drive.google.com/file/u/0/d/1JdbHkL2D8as1docfHyfLWhrhlSP9rZhf/view?usp=sharing&pli=1)
+To test on Toolbench, it is a little complex. You need to first request a ToolServer `toolbenchkey` following the guide [here](https://github.com/OpenBMB/ToolBench), also you can build it [locally](https://drive.google.com/file/u/0/d/1JdbHkL2D8as1docfHyfLWhrhlSP9rZhf/view?usp=sharing&pli=1)
 
-After setting up toolserver, you can set the toolserver-url in `answer_generation.py` line 272, and then run the commands: 
+after getting a toolbench key, you need to specify the `toolbench_key` in `ets_utils.py`
+
+After setting up toolserver, you can run the commands: 
 
 ```bash
 python answer_generation.py
 ```
 
-In our experiment, we use this split```./assetstoolbench_test_data_0925/test_query_ids```. We have hold the original ToolBench Test result in 2023, If you have any problems in implementing ToolBench, you can connect yeyn2001@gmail.com
+In our experiment, we use this split```./assetstoolbench_test_data_0925/test_query_ids```.  You can try different methods in `--method` part, like DFS, BFS, ETS. The explanation of the hyperparameters are described in the following part.
 
-
+> Because gpt-3.5-turbo-0613 can not be Requested by OpenAI, and the main experiement is performed in 2023.07, Many Rapid-API server is not exists today, the score may not re-implemented today. But we have hold the original ToolBench Test result of our main experiment, If you have any problems reimplementing ToolBench experiment,  you can connect yeyn2001@gmail.com
 
 ## Elo-Tree Search Hyperparameter explanation
 
 here, we just parse your method name, and specify it into some format ETS method such as `ETS_all-100_annealing_k50_sqrt_s100_f1_t173.72_p0.9_c15_m3_rn1_rg3`. we mainly split the name by "_", the logic is at `./test_codes/test_24.py`, line 340-380
+
+For ETS: 
 
 - ETS means Elo-base Tree Search, the main method of RaD-Agent
 - K50, means how to update the elo score in the equation. bigger k means to update elo score fastly. We set this to 50 in all the experiment
@@ -155,5 +156,25 @@ here, we just parse your method name, and specify it into some format ETS method
 - c15: the max number of one node in the tree. In this example, If one node's child count >= 15, we will never generate new nodes for it.
 - m3: perform elo backward ever 3 forward. Larger **m** will save API Cost, but the Elo approxmation may be biased. We use 3 in our experiment
 - rn1, rg3: When performing a championship, we first let all the newer nodes to complete **rn** times, and randomly select **rg** times global matching
+
+For DFS:
+
+- `woFilter` means to not perform pair-wise comparsion in the forward process. 
+  - In the original ToT DFS, this use `Filter` method, which may add many API request.
+  - The `DFSDT` methods means to set the `woFilter`
+- `w` means the width of the tree. The max child count of one node.
+
+For BFS: BFS follows a process similar to Beam-search
+
+- `w` means the beam-pool size, 
+- `e` means all the candidates in the pool have `e` child. So the total cost nears `depth*w*e`  
+
+For CoT:
+
+- `CoT@n` means to try n times. Early-stopping when findding a result
+
+For Reflexion:
+
+- `Reflexion@n` means to try n times. Early-stopping when findding a result
 
 You can read through `./LLM/ETS.py` to see the implemenation of the Elo-based tree search Algorithms

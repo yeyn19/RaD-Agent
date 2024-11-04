@@ -21,14 +21,12 @@ import time
 from pprint import pprint
 import pdb
 
+from ets_utils import api_key, base_url
 # from LLM.pool import pool
 
 api_key_pool = [
     "sk-1", #set your openai api key here
 ]
-
-api_key = "sk-1" #set your openai api key here
-base_url = "https://api.openai.com/v1/chat/completions"
 
 def get_keys():
     orgs,keys = [],[]
@@ -61,12 +59,12 @@ def chat_completion_request(messages, functions=None,function_call=None,key_pos=
     global now_pos
     if now_pos == -1:
         now_pos = process_id*457 + math.floor(len(keys3) / 2)
-
+    print(model)
     use_messages = []
     for message in messages:
         if not("valid" in message.keys() and message["valid"] == False):
             use_messages.append(message)
-    model = "gpt-3.5-turbo"
+    # model = "gpt-3.5-turbo"
     json_data = {
         "model": model,
         "messages": use_messages,
@@ -91,11 +89,15 @@ def chat_completion_request(messages, functions=None,function_call=None,key_pos=
         if key_pos == None:
             key_pos = now_pos
         # print(key_pos)
-        openai.api_key = api_key
-        openai.base_url = base_url
+        # openai.api_key = api_key
+        # openai.base_url = base_url
+        client = openai.OpenAI(
+            base_url=base_url,
+            api_key=api_key,
+        )
         try:
             
-            openai_response = openai.chat.completions.create(
+            openai_response = client.chat.completions.create(
                 **json_data,
                 # request_timeout=120,
             )
@@ -103,7 +105,8 @@ def chat_completion_request(messages, functions=None,function_call=None,key_pos=
             print(traceback.format_exc(), str(e))
             import pdb; pdb.set_trace()
         # print(openai_response)
-        json_data = json.loads(str(openai_response))
+        # import pdb; pdb.set_trace()
+        json_data = json.loads(str(openai_response.json()))
         # with open(os.path.join("./success.txt"), "a") as fa:
         #     fa.write(keys3[key_pos] + '\n')
         return json_data 
@@ -119,6 +122,7 @@ class chatgpt_0613:
         self.conversation_history = []
         self.time = time.time()
         self.TRY_TIME = 6
+        self.model_name = model
     def add_message(self, message):
         self.conversation_history.append(message)
 
@@ -147,7 +151,6 @@ class chatgpt_0613:
         print("end_print"+"*"*50)
 
     def parse(self,functions,process_id,key_pos=None,**args):
-        
         # while time.time() - self.time < 3: #3s
         #     continue
         self.time = time.time()
@@ -169,11 +172,11 @@ class chatgpt_0613:
                 time.sleep(15)
             if functions != []:
                 json_data = chat_completion_request(
-                    conversation_history, functions=functions,process_id=process_id, key_pos=key_pos,**args
+                    conversation_history, functions=functions,process_id=process_id,  model=self.model_name, key_pos=key_pos,**args
                 )
             else:
                 json_data = chat_completion_request(
-                    conversation_history,process_id=process_id,key_pos=key_pos, **args
+                    conversation_history,process_id=process_id,key_pos=key_pos, model=self.model_name, **args
                 )
             try:
                 total_tokens = json_data['usage']['total_tokens']
@@ -183,7 +186,7 @@ class chatgpt_0613:
 
                 if "function_call" in message.keys() and "." in message["function_call"]["name"]:
                     message["function_call"]["name"] = message["function_call"]["name"].split(".")[-1]
-
+                
                 return message, 0, total_tokens
             except BaseException as e:
                 print(f"[process({process_id})]Parsing Exception: {repr(e)}. Try again.")

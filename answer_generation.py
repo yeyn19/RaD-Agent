@@ -15,7 +15,8 @@ from Algorithms.DFS import DFS_tree_search
 from Algorithms.UCT_vote_function import UCT_vote_function
 from Algorithms.ETS import ETS_tree_search
 from Downstream_tasks.base_env import base_env
-from ets_utils import standardize, change_name, DATA_DIR, ASSET_DIR
+from ets_utils import standardize, change_name, DATA_DIR, ASSET_DIR, toolbench_server_ip, toolbench_key
+
 
 import re
 import os
@@ -262,19 +263,20 @@ You have access of the following tools:\n'''
                     pure_api_name = self.api_name_reflect[function["name"]]
                     # response = get_rapidapi_response(payload)
                     try:
-
                         payload = {
                             "category": self.cate_names[k],
                             "tool_name": self.tool_names[k],
                             "api_name": pure_api_name,
                             "tool_input": action_input,
                             "strip": "truncate",
+                            "toolbench_key": toolbench_key
                         }
                         # print(payload)
                         if self.process_id == 0:
                             print(colored(f"query to {self.cate_names[k]}-->{self.tool_names[k]}-->{action_name}",color="yellow"))
-                        url  = "http://47.251.13.204:8080/rapidapi"
-                        response = requests.post(url, json=payload,timeout=30)
+                        # url  = "http://47.251.13.204:8080/rapidapi"
+                        headers = {"toolbench_key": toolbench_key}
+                        response = requests.post(toolbench_server_ip, json=payload,timeout=30, headers=headers)
 
                         if response.status_code != 200:
                             return json.dumps({"error": f"request invalid, data error. status_code={response.status_code}", "response": ""}), 12
@@ -317,16 +319,16 @@ You have access of the following tools:\n'''
 
 
 def method_converter(backbone_model,method,env,process_id,single_chain_max_step=24,max_query_count=60):
-    if backbone_model == "ChatGPT":
-        model = "gpt-3.5-turbo-16k-0613"
-    elif backbone_model == "GPT4":
-        model = "gpt-4"
-        # model = "gpt-4-0613"
-    else:
-        print(f"Unsupported model: {backbone_model}")
-        raise NotImplementedError
+    # if backbone_model == "ChatGPT":
+    #     model = "gpt-3.5-turbo-16k-0613"
+    # elif backbone_model == "GPT4":
+    #     model = "gpt-4"
+    #     # model = "gpt-4-0613"
+    # else:
+    #     print(f"Unsupported model: {backbone_model}")
+    #     raise NotImplementedError
     
-    llm_forward = chatgpt_0613(model=model)
+    llm_forward = chatgpt_0613(model=backbone_model)
     if method.startswith("CoT"): #单次模拟的UCT就是CoT
         passat = int(method.split("@")[-1])
         chain = single_chain(llm=llm_forward, io_func=env,process_id=process_id)
@@ -498,14 +500,15 @@ def main(query_dir, answer_dir, method,backbone_model):
         pickle.dump(white_list,open(white_list_cache_file,"wb"))
     task_list = []
     with open(query_dir,"r") as reader:
-        for k,line in tqdm(enumerate(reader)):
-            
-            try:
-                data_dict = json.loads(line.strip()[:-1])
-            except Exception as e:
-                print(e)
-                continue
-
+        all_tools = json.load(reader)
+        for k,data_dict in tqdm(enumerate(all_tools)):
+            # data_dict = line
+            # try:
+            #     data_dict = json.loads(line.strip()[:-1])
+            # except Exception as e:
+            #     print(e)
+            #     continue
+            # import pdb; pdb.set_trace()
             origin_tool_names = [cont["tool_name"] for cont in data_dict["api_list"]]
 
 
@@ -575,9 +578,9 @@ if __name__ == "__main__":
     # parser.add_argument('--output_answer_file', type=str, default=os.path.join(DATA_DIR,"multicate_multitool_multianswer_new_format"), 
     # required=False, help='output path')
 
-    parser.add_argument('--process_num', type=int, default=50, required=False, help='process number')
+    parser.add_argument('--process_num', type=int, default=1, required=False, help='process number')
     parser.add_argument('--debug', type=int, default=0, required=False, help='1 for debugging')
-    parser.add_argument('--backbone_model', type=str, default="GPT4", required=False, help='backbone_model')
+    parser.add_argument('--backbone_model', type=str, default="gpt-4o-mini", required=False, help='backbone_model')
 
     parser.add_argument('--method', type=str, default="DFS_woFilter_w2", required=False, help='method for answer generation: CoT@n,Reflexion@n,BFS_wn_en, DFS_woFilter_wn,UCT_vote, ETS_sn_fn_tn_pn_cn_mn_rnn_rgn') 
     # ETS_annealing_sqrt_woInitElo_s10_f1_t173.72_p0.5_c4_m3_rn3_rg4
@@ -602,8 +605,8 @@ if __name__ == "__main__":
 
     valid_query_id_file_name = "G3_instruction_test_query_ids"
 
-    with open(os.path.join(DATA_DIR, "valid_query_id",f"{answer_file_name}_{valid_query_id_file_name}.json"),"r") as reader:
-        valid_query_ids = json.load(reader)
+    # with open(os.path.join(DATA_DIR, "valid_query_id",f"{answer_file_name}_{valid_query_id_file_name}.json"),"r") as reader:
+    #     valid_query_ids = json.load(reader)
 
 
 
@@ -614,8 +617,8 @@ if __name__ == "__main__":
     for task in tqdm(task_list):
         out_dir_path = task[-2]
         query_id = task[2]
-        if query_id not in valid_query_ids:
-            continue
+        # if query_id not in valid_query_ids:
+        #     continue
 
         valid_query_id.append(query_id)
         output_file_path = os.path.join(out_dir_path,f"{query_id}_{backbone_model}_{method}.json")
@@ -623,6 +626,7 @@ if __name__ == "__main__":
             new_task_list.append(task)
     task_list = new_task_list
 
+    os.makedirs(os.path.join(DATA_DIR,"valid_query_id"),exist_ok=True)
     with open(os.path.join(DATA_DIR,"valid_query_id",f"{answer_file_name}_{valid_query_id_file_name}.json"),"w") as writer:
         json.dump(valid_query_id,writer)
 

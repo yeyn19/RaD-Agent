@@ -541,8 +541,6 @@ def main(query_dir, answer_dir, method,backbone_model):
 
             task_list.append((method, backbone_model, k, data_dict, query, answer_dir,tool_des))
 
-            # if len(task_list) > 1000:
-            #     break
     return task_list
 
 def get_white_list(name):
@@ -578,7 +576,7 @@ class Consumer(threading.Thread):
 if __name__ == "__main__":
     answer_file_name = "answer_G2_singleanswer"
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_query_file', type=str, default=os.path.join(DATA_DIR,"queryG2.json"), required=False, help='input path')
+    parser.add_argument('--input_query_file', type=str, default=os.path.join(DATA_DIR, "queryG2.json"), required=False, help='input path')
     parser.add_argument('--output_answer_file', type=str, default=os.path.join(DATA_DIR,answer_file_name), 
     required=False, help='output path')
 
