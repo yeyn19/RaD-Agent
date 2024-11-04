@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+*.egg-info/
+*.egg-info
+*.egg
+
+# Temporary files
+*.swn
+*.swo
+*.swp
+
+# IDEs
+.idea
+.vscode
+
+# Mac
+.DS_STORE
+
+# Notebooks
+.ipynb_checkpoints/
+
+Downstream_tasks/alfworld/
+Downstream_tasks/alfworld_data/
+test_result/*
+Downstream_tasks/raw_data/*
+make_data/tool_queries/*
+make_data/tool_outputs/*
+make_data/BMTools-rapidapi/
+core.*
+
+data
