@@ -21,28 +21,31 @@ import time
 from pprint import pprint
 import pdb
 
-from LLM.pool import pool, pool2
+# from LLM.pool import pool
 
+api_key_pool = [
+    "sk-1", #set your openai api key here
+]
 
-api_key = os.environ['OPENAI_API_KEY']
-base_url = os.environ['OPENAI_API_URL']
+api_key = "sk-1" #set your openai api key here
+base_url = "https://api.openai.com/v1/chat/completions"
 
 def get_keys():
     orgs,keys = [],[]
-    lines = (pool).split("\n")
     # lines = (pool_7).split("\n")
-    for line in lines:
+    for line in api_key_pool:
         if line.startswith('sk-'):
             keys.append(line)
-        elif "----" in line:
-            conts = line[2:].split("----")
-        else:
-            conts = line[2:].split("|")
-        for cont in conts:
-            if cont.startswith("sk-"):
-                keys.append(cont.strip())
-            if cont.startswith("org-"):
-                orgs.append(cont.strip())
+        orgs.append(line)
+        # elif "----" in line:
+        #     conts = line[2:].split("----")
+        # else:
+        #     conts = line[2:].split("|")
+        # for cont in conts:
+        #     if cont.startswith("sk-"):
+        #         keys.append(cont.strip())
+        #     if cont.startswith("org-"):
+        #         orgs.append(cont.strip())
     return orgs, keys
 orgs3, keys3 = get_keys()
 invalid_positions = []
@@ -92,9 +95,9 @@ def chat_completion_request(messages, functions=None,function_call=None,key_pos=
         openai.base_url = base_url
         try:
             
-            openai_response = openai.ChatCompletion.create(
+            openai_response = openai.chat.completions.create(
                 **json_data,
-                request_timeout=120,
+                # request_timeout=120,
             )
         except BaseException as e:
             print(traceback.format_exc(), str(e))

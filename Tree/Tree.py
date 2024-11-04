@@ -1,8 +1,9 @@
 from termcolor import colored
 import numpy as np
 from copy import deepcopy
-from utils import softmax_bias
 import math
+
+from ets_utils import softmax_bias
 
 class my_tree:
     def __init__(self):
