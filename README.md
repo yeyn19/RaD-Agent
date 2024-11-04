@@ -137,9 +137,7 @@ After setting up toolserver, you can set the toolserver-url in `answer_generatio
 python answer_generation.py
 ```
 
-
-
-In our experiment, we use this split```./assetstoolbench_test_data_0925/test_query_ids```,
+In our experiment, we use this split```./assetstoolbench_test_data_0925/test_query_ids```. We have hold the original ToolBench Test result in 2023, If you have any problems in implementing ToolBench, you can connect yeyn2001@gmail.com
 
 
 
