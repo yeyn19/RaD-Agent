@@ -126,11 +126,12 @@ python ./test_codes/MCTS.py
 
 ## 4. ToolBench
 
-To test on Toolbench, it is a little complex. You need to first request a ToolServer `toolbenchkey` following the guide [here](https://github.com/OpenBMB/ToolBench), also you can build it [locally](https://drive.google.com/file/u/0/d/1JdbHkL2D8as1docfHyfLWhrhlSP9rZhf/view?usp=sharing&pli=1)
+To test on Toolbench, it is a little complex. You need to 
 
-after getting a toolbench key, you need to specify the `toolbench_key` in `ets_utils.py`
+1. request a ToolServer `toolbenchkey` following the guide [here](https://github.com/OpenBMB/ToolBench), also you can build it [locally](https://drive.google.com/file/u/0/d/1JdbHkL2D8as1docfHyfLWhrhlSP9rZhf/view?usp=sharing&pli=1) after getting a toolbench key, you need to specify the `toolbench_key` in `ets_utils.py`
+2. add denpendency: We use an early version of toolbench, so you need to unzip the `assets.zip` to unzip the denpendency.
 
-After setting up toolserver, you can run the commands: 
+After setting up toolbench env, you can run the commands: 
 
 ```bash
 python answer_generation.py
